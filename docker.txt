@@ -1,0 +1,13 @@
+nano a.js
+echo 'FROM node:alpine
+workdir /app
+COPY . .
+CMD ["node","a.js"]' > Dockerfile
+ls
+sudo docker - debug build -t <username>/<imgname> .
+ sudo docker images
+
+sudo docker login
+sudo docker tag <username>/<imgnaem> <username>/<dockerhub_imgname>:latest
+ sudo docker push <username>/<dockerhub_imgname>:latest
+docker run <username>/<imgnaem>
