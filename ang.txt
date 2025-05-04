@@ -1,0 +1,162 @@
+// ✅ Step-by-Step Instructions to Build Angular App with Register, Login, and Profile using localStorage
+
+// 1. Create a new Angular project
+// ng new user-auth-app
+// cd user-auth-app
+
+// 2. Install Angular Forms Module (if not already included)
+// ng add @angular/forms
+
+// 3. Generate Components and Service
+// ng generate component components/home
+// ng generate component components/register
+// ng generate component components/login
+// ng generate component components/profile
+// ng generate service services/auth
+
+// 4. Set up Routing in app-routing.module.ts
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { HomeComponent } from './components/home/home.component';
+import { RegisterComponent } from './components/register/register.component';
+import { LoginComponent } from './components/login/login.component';
+import { ProfileComponent } from './components/profile/profile.component';
+
+const routes: Routes = [
+  { path: '', component: HomeComponent },
+  { path: 'register', component: RegisterComponent },
+  { path: 'login', component: LoginComponent },
+  { path: 'profile', component: ProfileComponent },
+  { path: '**', redirectTo: '' },
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule],
+})
+export class AppRoutingModule {}
+
+
+// 5. Register FormsModule and ReactiveFormsModule in app.module.ts
+// import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+
+// 6. Implement Auth Service in services/auth.service.ts
+import { Injectable } from '@angular/core';
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private key = 'user';
+
+  register(user: any) {
+    localStorage.setItem(this.key, JSON.stringify(user));
+  }
+
+  login(email: string, password: string): boolean {
+    const stored = JSON.parse(localStorage.getItem(this.key) || '{}');
+    return stored.email === email && stored.password === password;
+  }
+
+  getUser() {
+    return JSON.parse(localStorage.getItem(this.key) || '{}');
+  }
+}
+
+
+// 7. Home Component (home.component.html)
+<h2>Welcome!</h2>
+<button routerLink="/login">Login</button>
+<button routerLink="/register">Register</button>
+
+
+// 8. Register Component
+// register.component.ts
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup } from '@angular/forms';
+import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+
+@Component({ selector: 'app-register', templateUrl: './register.component.html' })
+export class RegisterComponent {
+  form: FormGroup;
+  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
+    this.form = this.fb.group({
+      name: [''],
+      email: [''],
+      password: [''],
+    });
+  }
+
+  register() {
+    this.auth.register(this.form.value);
+    this.router.navigate(['/login']);
+  }
+}
+
+// register.component.html
+<h2>Register</h2>
+<form [formGroup]="form" (ngSubmit)="register()">
+  <input type="text" placeholder="Name" formControlName="name" />
+  <input type="email" placeholder="Email" formControlName="email" />
+  <input type="password" placeholder="Password" formControlName="password" />
+  <button type="submit">Register</button>
+</form>
+
+
+// 9. Login Component
+// login.component.ts
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup } from '@angular/forms';
+import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+
+@Component({ selector: 'app-login', templateUrl: './login.component.html' })
+export class LoginComponent {
+  form: FormGroup;
+  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
+    this.form = this.fb.group({
+      email: [''],
+      password: [''],
+    });
+  }
+
+  login() {
+    if (this.auth.login(this.form.value.email, this.form.value.password)) {
+      this.router.navigate(['/profile']);
+    } else {
+      alert('Invalid credentials');
+    }
+  }
+}
+
+// login.component.html
+<h2>Login</h2>
+<form [formGroup]="form" (ngSubmit)="login()">
+  <input type="email" placeholder="Email" formControlName="email" />
+  <input type="password" placeholder="Password" formControlName="password" />
+  <button type="submit">Login</button>
+</form>
+
+
+// 10. Profile Component
+// profile.component.ts
+import { Component, OnInit } from '@angular/core';
+import { AuthService } from '../../services/auth.service';
+
+@Component({ selector: 'app-profile', templateUrl: './profile.component.html' })
+export class ProfileComponent implements OnInit {
+  user: any;
+  constructor(private auth: AuthService) {}
+
+  ngOnInit() {
+    this.user = this.auth.getUser();
+  }
+}
+
+// profile.component.html
+<h2>User Profile</h2>
+<p><strong>Name:</strong> {{ user.name }}</p>
+<p><strong>Email:</strong> {{ user.email }}</p>
+
+
+// 11. Run the Angular Application
+// ng serve --open
